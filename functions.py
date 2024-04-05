@@ -12,30 +12,30 @@ import os.path
 from cnn import *
 
 def extract_data(path='data'):
-  # Extract data
+  # Extrair Dados 
   mnist_data = MNIST(os.path.abspath(path))
 
-  # Reshape training data
+  # Remodelar dados de treinamento
   X, Y = mnist_data.load_training()
   X_train = np.reshape(np.asarray(X, dtype=np.uint8), (60000, 28, 28, 1))
   Y_train = np.reshape(np.asarray(Y, dtype=np.uint8), (60000,))
-  # Normalize data for better results
+  # Normalize os dados para obter melhores resultados
   X_train = X_train.astype('float32')/255
-  # Convert labels to categoricals (0 -> [1 0 0 0 0 0 0 0 0 0])
+  # Converter rótulos em categóricos (0 -> [1 0 0 0 0 0 0 0 0 0])
   Y_train = keras.utils.to_categorical(Y_train, num_classes=10)
 
-  # Reshape test data
+  # Remodelar dados de teste
   X, Y = mnist_data.load_testing()
   X_test = np.reshape(np.asarray(X, dtype=np.uint8), (10000, 28, 28, 1))
   Y_test = np.reshape(np.asarray(Y, dtype=np.uint8), (10000,))
-  # Normalize data for better results
+  # Normalize os dados para obter melhores resultados
   X_test = X_test.astype('float32')/255
-  # Convert labels to categoricals (5 -> [0 0 0 0 0 1 0 0 0 0])
+  # Converter rótulos em categóricos (5 -> [0 0 0 0 0 1 0 0 0 0])
   Y_test = keras.utils.to_categorical(Y_test, num_classes=10)
   return (X_train, Y_train), (X_test, Y_test)
 
 def get_test_models():
-  # Create list of parameters to test
+  # Crie uma lista de parâmetros para testar
   models_params = [
     {
       'name': 'padrao-4-6-500',
@@ -102,25 +102,25 @@ def train_models(models_params, X_train, Y_train, X_test, Y_test):
     name = model_params['name']
     params = model_params['parameters']
 
-    # Create the Model for the mnist
+    # Crie o modelo para o mnist
     model = MnistModel(name)
     model.generate_model(**params)
-    # Train the model and save the model
+    # Treine o modelo e salve o modelo
     model.train(X_train, Y_train, epochs=20)
     model.save_model()
     print("Trained model {}.".format(name))
 
-    # Load metrics
+    # Carregar métricas
     history = model.history.copy()
     metrics = model.calculate_metrics(X_test, Y_test)
     metrics_names = model.get_metrics_names()
 
-    # Extend metrics to all epochs
+    # Estenda as métricas para todas as épocas
     for metric, values in history.items():
       for i in range(len(values), 20):
         values.append(values[len(values)-1])
 
-    # Save the metrics
+    # Salve as métricas
     data[name] = (history, dict(zip(metrics_names, metrics)))
   return data
 
@@ -130,44 +130,44 @@ def load_models(models_params, X_test, Y_test):
     name = model_params['name']
     params = model_params['parameters']
 
-    # Load the Model for the mnist
+    # Carregue o modelo para o mnist
     model = MnistModel(name)
     model.load_model()
     print("Loaded model {}.".format(name))
 
-    # Load metrics
+    # Carregar métricas
     history = model.history.copy()
     metrics = model.calculate_metrics(X_test, Y_test)
     metrics_names = model.get_metrics_names()
 
-    # Extend metrics to all epochs
+    # Estenda as métricas para todas as épocas
     for metric, values in history.items():
       for i in range(len(values), 20):
         values.append(values[len(values)-1])
 
-    # Save the metrics
+    # Salve as métricas
     data[name] = (history, dict(zip(metrics_names, metrics)))
   return data
 
 def present_metrics(data):
-  # Create the figures and axes to plot the data
+  # Crie as figuras e eixos para traçar os dados
   loss = plt.figure("Loss").gca()
   accuracy = plt.figure("Accuracy").gca()
   precision = plt.figure("Precision").gca()
 
   for name, (history, metrics) in data.items():
-    # Plot metrics
+    # Métricas de plotagem
     loss.plot(history['val_loss'], label=name)
     accuracy.plot(history['val_acc'], label=name)
     precision.plot(history['val_precision'], label=name)
 
-    # Print test results
+    # Imprimir resultados de testes
     print(name)
     for name, metric in metrics.items():
       print("{}: {}".format(name, metric))
     print()
 
-  # Prettify the graphs
+  # Embeleze os gráficos
   loss.set_xlabel("Epochs")
   loss.set_ylabel("Loss (Categorical Crossentropy)")
   loss.set_title("Loss Evolution")
@@ -196,10 +196,10 @@ def save_all_figs():
     fig.savefig('img/'+label+'.png')
 
 def visualize_filters(model):
-  # Load filters for showing
+  # Carregar filtros para exibição
   layers = model.get_filters()
 
-  # Show all neurons filters of the first layer in a single plot
+  # Mostrar todos os filtros de neurônios da primeira camada em um único gráfico
   layer = 'first_conv'
   fig = plt.figure(layer+'-filters-all_neurons')
   axes = fig.subplots(2,2)
@@ -213,7 +213,7 @@ def visualize_filters(model):
       remove_marks(axes[ax_num])
       ax_num += 1
 
-  # Show all 4 channels of each neuron of the second layer in a single plot
+  # Mostre todos os 4 canais de cada neurônio da segunda camada em um único gráfico
   layer = 'second_conv'
   filt = layers[layer][0]
   for o in range(filt.shape[3]):
@@ -232,9 +232,10 @@ def visualize_activations(model, X):
     'first_conv': ((2,2), {}),
     'second_conv': ((2,3), {'fontsize':10.5}),
   }
-  # Present the activations for a example
+  
+  # Apresente as ativações como exemplo
   for layer, (subplots, title_properties) in layers.items():
-    # Get the activation for the specified input
+    # Obtenha a ativação para a entrada especificada
     activation = model.get_activation(X, layer_name=layer)
     fig = plt.figure(layer+'-neurons_activation')
     axes = fig.subplots(*subplots)
